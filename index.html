@@ -89,12 +89,12 @@
             min-height: 120px; font-size: clamp(18px, 4vw, 24px); line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;
         }
         .story-text { font-size: 1em; color: #334155; margin-bottom: 8px; font-weight: 900; }
-        .emoji-big { font-size: 1.6em; margin: 5px 0; word-break: break-all; line-height: 1.1;}
+        .emoji-big { font-size: 1.6em; margin: 5px 0; word-break: break-all; line-height: 1.2;}
         .inline-avatar { display: inline-flex; align-items: center; justify-content: center; width: 1.5em; height: 1.5em; vertical-align: bottom; margin: 0 5px; }
         .visual-target { font-size: 2.2em; margin: 10px 0; display: inline-block; word-break: break-all; line-height: 1.2;}
 
         .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-answer { background: white; border: 4px solid #E2E8F0; border-radius: 20px; padding: 15px; font-size: clamp(22px, 5vw, 32px); font-weight: 900; color: var(--text-main); cursor: pointer; transition: 0.1s; box-shadow: 0 8px 0 #E2E8F0; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3;}
+        .btn-answer { background: white; border: 4px solid #E2E8F0; border-radius: 20px; padding: 15px; font-size: clamp(24px, 5vw, 36px); font-weight: 900; color: var(--text-main); cursor: pointer; transition: 0.1s; box-shadow: 0 8px 0 #E2E8F0; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.3;}
         .btn-answer:hover { background: #FEF3C7; border-color: #F59E0B; box-shadow: 0 8px 0 #D97706;}
         .btn-answer:active { transform: translateY(8px); box-shadow: 0 0 0 #D97706; }
 
@@ -230,7 +230,7 @@
 
     <script>
         // =========================================================================
-        // [CẤU HÌNH FIREBASE CLOUD]
+        // [CẤU HÌNH FIREBASE CLOUD] - Tích hợp lưu trữ online đồng bộ cực nhanh
         // =========================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyCfnrv1oTx9YXdfDHux3lSA41ZCFBtzLf0",
@@ -256,6 +256,7 @@
             console.log("Không thể kết nối Firebase. Đang chạy chế độ Local.");
         }
 
+        // --- 1. HỖ TRỢ NGÀY THÁNG ---
         function calculateAge(dobString) {
             if(!dobString) return 0;
             const diff = Date.now() - new Date(dobString).getTime();
@@ -271,6 +272,7 @@
             document.getElementById('clock-display').innerText = `${now.toLocaleDateString('vi-VN')} - ${now.toLocaleTimeString('vi-VN')}`;
         }, 1000);
 
+        // --- 2. ÂM THANH ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -287,73 +289,105 @@
             }
         }
 
+        // --- 3. DỮ LIỆU & BIẾN TOÀN CẦU ---
         let appData = { parentPass: "1234", theme: "default", lastUpdated: 0, kids: [] };
         let currentKidIndex = -1; let authTarget = ''; let currentCorrectAnswer = null;
         let studyInterval = null; let questionTimeout = null; let editingIndex = -1;
         let questionStartTime = 0; let uploadTargetIndex = -1; let currentPin = "";
 
-        // ================= KHO DỮ LIỆU CÂU HỎI TRỰC QUAN MỞ RỘNG =================
-        const D_FRUITS = [{e:'🍎', n:'Quả Táo'}, {e:'🍌', n:'Quả Chuối'}, {e:'🍉', n:'Dưa Hấu'}, {e:'🍓', n:'Dâu Tây'}, {e:'🍇', n:'Chùm Nho'}, {e:'🍊', n:'Quả Cam'}, {e:'🥭', n:'Quả Xoài'}, {e:'🥥', n:'Quả Dừa'}, {e:'🥝', n:'Kiwi'}, {e:'🍒', n:'Cherry'}];
-        const D_ANIMALS = [{e:'🐶', n:'Con Chó'}, {e:'🐱', n:'Con Mèo'}, {e:'🐭', n:'Con Chuột'}, {e:'🐰', n:'Con Thỏ'}, {e:'🐻', n:'Con Gấu'}, {e:'🐯', n:'Con Hổ'}, {e:'🦁', n:'Sư Tử'}, {e:'🐮', n:'Con Bò'}, {e:'🐷', n:'Con Lợn'}, {e:'🐸', n:'Con Ếch'}, {e:'🐵', n:'Con Khỉ'}, {e:'🐔', n:'Con Gà'}];
-        const D_VEHICLES = [{e:'🚗', n:'Xe Hơi'}, {e:'✈️', n:'Máy Bay'}, {e:'🚁', n:'Trực Thăng'}, {e:'🚲', n:'Xe Đạp'}, {e:'🛵', n:'Xe Máy'}, {e:'🚢', n:'Tàu Thủy'}, {e:'🚂', n:'Tàu Hỏa'}, {e:'🚀', n:'Tên Lửa'}];
-        const D_TOYS = [{e:'🧸', n:'Gấu Bông'}, {e:'🎈', n:'Bóng Bay'}, {e:'⚽', n:'Quả Bóng'}, {e:'🎨', n:'Bút Màu'}, {e:'🪁', n:'Cái Diều'}, {e:'🪀', n:'Yoyo'}];
-        
-        const ALL_ITEMS = [...D_FRUITS, ...D_ANIMALS, ...D_VEHICLES, ...D_TOYS];
-        
-        const K_LOGIC_3 = [
-            {q: 'Quả nào có màu ĐỎ chót?', a: '🍎', f: ['🍌', '🍉', '🥥']}, {q: 'Quả nào có màu VÀNG tươi?', a: '🍌', f: ['🍎', '🍇', '🍓']},
-            {q: 'Con nào kêu GÂU GÂU?', a: '🐶', f: ['🐱', '🐭', '🐰']}, {q: 'Con nào kêu MEO MEO?', a: '🐱', f: ['🐶', '🐻', '🐯']},
-            {q: 'Con nào gáy Ò Ó O?', a: '🐔', f: ['🦆', '🐶', '🐭']}, {q: 'Cái nào bay trên TRỜI?', a: '✈️', f: ['🚗', '🚲', '🚢']},
-            {q: 'Cái nào chạy dưới NƯỚC?', a: '🚢', f: ['✈️', '🚗', '🚁']}, {q: 'Trời mưa bé dùng gì che?', a: '☂️', f: ['🕶️', '🎒', '👟']},
-            {q: 'Sáng sớm thấy gì trên trời?', a: '☀️', f: ['🌙', '⭐', '☁️']}, {q: 'Buổi tối thấy gì trên trời?', a: '🌙', f: ['☀️', '🌈', '☂️']}
+        const D_ITEMS = [
+            {e:'🍎', n:'Quả Táo'}, {e:'🍌', n:'Quả Chuối'}, {e:'🍉', n:'Dưa Hấu'}, {e:'🍓', n:'Dâu Tây'}, {e:'🍇', n:'Chùm Nho'},
+            {e:'🐶', n:'Con Chó'}, {e:'🐱', n:'Con Mèo'}, {e:'🐭', n:'Con Chuột'}, {e:'🐰', n:'Con Thỏ'}, {e:'🐻', n:'Con Gấu'},
+            {e:'🚗', n:'Xe Hơi'}, {e:'✈️', n:'Máy Bay'}, {e:'🧸', n:'Gấu Bông'}, {e:'🎈', n:'Bóng Bay'}, {e:'⚽', n:'Quả Bóng'}
         ];
+        
+        const K_LOGIC = [{q: 'Sáng sớm thức dậy, con sẽ thấy gì trên trời?', a: '☀️', f: ['🌙', '⭐', '☁️', '🌈']}, {q: 'Trời mưa to, con cần dùng gì để không ướt?', a: '☂️', f: ['🕶️', '🎒', '👟', '🧢']}, {q: 'Bạn Voi 🐘 và Bạn Chuột 🐭, bạn nào NẶNG hơn?', a: '🐘', f: ['🐭', '🐱', '🐰']}, {q: 'Máy bay ✈️ và Xe đạp 🚲, cái nào chạy NHANH hơn?', a: '✈️', f: ['🚲', '🚗', '🐢']}];
 
-        const K_LOGIC_6 = [
-            {q: 'Con nào NẶNG nhất?', a: '🐘', f: ['🐭', '🐱', '🐰']}, {q: 'Cái nào chạy NHANH nhất?', a: '🚀', f: ['✈️', '🚗', '🚲']},
-            {q: 'Con nào CÓ CÁNH bay được?', a: '🦅', f: ['🐶', '🐱', '🐭']}, {q: 'Mùa đông lạnh thì mặc gì?', a: '🧥', f: ['🩱', '🩳', '👕']},
-            {q: 'Hôm nay thứ 2, ngày mai là?', a: 'Thứ 3', f: ['Thứ 4', 'Chủ Nhật', 'Thứ 7']}, {q: 'Hôm qua thứ 5, hôm nay là?', a: 'Thứ 6', f: ['Thứ 4', 'Thứ 7', 'Thứ 2']},
-            {q: 'Một tuần có mấy ngày?', a: '7', f: ['5', '6', '8']}, {q: 'Con Rùa và Thỏ, con nào CHẬM hơn?', a: '🐢', f: ['🐰', '🐶', '🐱']},
-            {q: 'Mặt trời lặn ở hướng nào?', a: 'Hướng Tây', f: ['Hướng Đông', 'Hướng Nam', 'Hướng Bắc']}
-        ];
-
+        // ==========================================
+        // KHỞI TẠO ĐỒNG BỘ: TRÁNH LỖI TIMESTAMP MỚI TẠO ĐÈ LÊN CLOUD
+        // ==========================================
         function initApp() {
-            const localRaw = localStorage.getItem('brainGameData_v19'); 
-            if (localRaw) { try { appData = JSON.parse(localRaw); ensureDataStructure(); } catch(e) { createDefaultProfiles(); } } 
-            else { createDefaultProfiles(); }
-
-            changeTheme(appData.theme || 'default');
-            renderKidsMenu();
+            let isLoaded = false;
+            const localRaw = localStorage.getItem('brainGameData_v20'); // Đổi key v20 làm sạch lỗi cũ
+            let localData = localRaw ? JSON.parse(localRaw) : null;
 
             if (isFirebaseConnected) {
-                document.getElementById('firebase-status').innerText = "📡 Đang kết nối Real-time Cloud...";
+                document.getElementById('firebase-status').innerText = "📡 Đang lấy dữ liệu máy chủ Cloud...";
+                
+                // Fallback nếu mạng yếu
+                setTimeout(() => {
+                    if (!isLoaded) {
+                        isLoaded = true;
+                        loadFallback(localData, "⚠️ Mạng yếu. Đang dùng dữ liệu trên máy.");
+                    }
+                }, 3500);
+
                 dbRef.on('value', (snapshot) => {
+                    if (isLoaded) return;
+                    isLoaded = true;
+                    
                     const cloudData = snapshot.val();
-                    if (cloudData) {
-                        if ((cloudData.lastUpdated || 0) > (appData.lastUpdated || 0)) {
-                            appData = cloudData; ensureDataStructure();
-                            localStorage.setItem('brainGameData_v19', JSON.stringify(appData));
-                            changeTheme(appData.theme || 'default'); renderKidsMenu();
+                    
+                    if (cloudData && cloudData.kids) {
+                        // So sánh dữ liệu Cloud với dữ liệu Local
+                        // Ưu tiên dữ liệu Cloud nếu Local chưa có gì, HOẶC Cloud có Timestamp mới hơn
+                        if (!localData || (cloudData.lastUpdated || 0) > (localData.lastUpdated || 0) || localData.kids.length === 0) {
+                            appData = cloudData;
+                            ensureDataStructure();
+                            localStorage.setItem('brainGameData_v20', JSON.stringify(appData));
+                            
+                            changeTheme(appData.theme || 'default');
+                            renderKidsMenu();
                             if(!document.getElementById('screen-parent').classList.contains('hidden')) renderParentDashboard();
                             if(!document.getElementById('screen-game').classList.contains('hidden')) updateGameHeader();
-                            document.getElementById('firebase-status').innerText = "⚡ Đã cập nhật tức thì từ thiết bị khác!";
-                        } else if ((cloudData.lastUpdated || 0) < (appData.lastUpdated || 0)) {
+                            document.getElementById('firebase-status').innerText = "⚡ Đã cập nhật tức thì từ Cloud!";
+                        } else if ((cloudData.lastUpdated || 0) < (localData.lastUpdated || 0)) {
+                            // Local mới hơn -> Cập nhật lên Cloud
+                            appData = localData;
                             dbRef.set(appData);
+                            document.getElementById('firebase-status').innerText = "✅ Đã đồng bộ từ Máy lên Cloud";
+                            changeTheme(appData.theme || 'default');
+                            renderKidsMenu();
                         } else {
+                            appData = cloudData;
                             document.getElementById('firebase-status').innerText = "✅ Dữ liệu Cloud đồng bộ an toàn";
+                            changeTheme(appData.theme || 'default');
+                            renderKidsMenu();
                         }
                     } else {
-                        dbRef.set(appData); document.getElementById('firebase-status').innerText = "✅ Khởi tạo dữ liệu Cloud thành công";
+                        // Firebase trống trơn
+                        if (localData && localData.kids && localData.kids.length > 0) {
+                            appData = localData;
+                        } else {
+                            createDefaultProfiles();
+                        }
+                        dbRef.set(appData);
+                        document.getElementById('firebase-status').innerText = "✅ Khởi tạo dữ liệu Cloud thành công";
+                        changeTheme(appData.theme || 'default');
+                        renderKidsMenu();
                     }
                 });
             } else {
-                document.getElementById('firebase-status').innerText = "💾 Đang dùng bộ nhớ máy (Offline)";
+                loadFallback(localData, "💾 Đang dùng bộ nhớ máy (Offline)");
             }
+        }
+
+        function loadFallback(localData, msg) {
+            document.getElementById('firebase-status').innerText = msg;
+            if (localData && localData.kids && localData.kids.length > 0) { 
+                appData = localData; 
+                ensureDataStructure();
+            } else { 
+                createDefaultProfiles(); 
+            }
+            changeTheme(appData.theme || 'default');
+            renderKidsMenu();
         }
 
         function createDefaultProfiles() {
             appData = { parentPass: "1234", theme: "default", lastUpdated: Date.now(), kids: [] };
-            appData.kids.push({ name: "Bảo Nam", dob: "2020-03-20", avatarType: "emoji", avatarData: "👦", pin: "000", level: 1, diamonds: 50, correctStreak: 0, wrongStreak: 0, studyTime: 0, lastDate: '', totalCorrect: 0, totalWrong: 0, fastAnswers: 0 });
-            appData.kids.push({ name: "Thảo Nguyên", dob: "2017-04-21", avatarType: "emoji", avatarData: "👧", pin: "000", level: 6, diamonds: 100, correctStreak: 0, wrongStreak: 0, studyTime: 0, lastDate: '', totalCorrect: 0, totalWrong: 0, fastAnswers: 0 });
+            appData.kids.push({ name: "Bảo Nam", dob: "2023-03-20", avatarType: "emoji", avatarData: "👦", pin: "000", level: 1, diamonds: 50, correctStreak: 0, wrongStreak: 0, studyTime: 0, lastDate: '', totalCorrect: 0, totalWrong: 0, fastAnswers: 0 });
+            appData.kids.push({ name: "Thảo Nguyên", dob: "2020-04-21", avatarType: "emoji", avatarData: "👧", pin: "000", level: 6, diamonds: 100, correctStreak: 0, wrongStreak: 0, studyTime: 0, lastDate: '', totalCorrect: 0, totalWrong: 0, fastAnswers: 0 });
             saveData();
         }
 
@@ -369,8 +403,10 @@
 
         function saveData() { 
             appData.lastUpdated = Date.now();
-            localStorage.setItem('brainGameData_v19', JSON.stringify(appData)); 
-            if (isFirebaseConnected) { dbRef.set(appData).catch(e => console.log("Lỗi đồng bộ:", e)); }
+            localStorage.setItem('brainGameData_v20', JSON.stringify(appData)); 
+            if (isFirebaseConnected) { 
+                dbRef.set(appData).catch(e => console.log("Lỗi đồng bộ Cloud:", e)); 
+            }
         }
 
         function showToast(msg) { let t = document.getElementById('toast-msg'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
@@ -502,40 +538,32 @@
         function getRandomArr(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
         function shuffleSlice(arr, count) { return [...arr].sort(() => 0.5 - Math.random()).slice(0, count); }
 
-        // =========================================================================
-        // [ĐỘNG CƠ CÂU HỎI TRỰC QUAN & TƯ DUY]
-        // =========================================================================
         function generateKidFriendlyQuestion(kid, level) {
             let q = { html: '', answer: null, options: [] };
             let ava = kid.avatarType === 'image' ? `<img src="${kid.avatarData}" class="inline-avatar" style="border-radius:50%; object-fit:cover; border:2px solid var(--primary);">` : `<span class="inline-avatar" style="font-size:1.5em;">${kid.avatarData}</span>`; 
 
-            // CẤP 1 (Level 1-5): BÉ 3 TUỔI (Không bắt đọc chữ, 100% hình ảnh)
             if (level <= 5) {
                 let rType = Math.random();
                 if (rType < 0.5) {
-                    // Game Đếm Hình: Hình ảnh to rõ, rực rỡ
-                    let ans = Math.floor(Math.random() * (level * 2 + 1)) + 1; 
-                    let item = getRandomArr(ALL_ITEMS);
+                    let ans = Math.floor(Math.random() * (level + 2)) + 1; 
+                    let item = getRandomArr(D_ITEMS);
                     q.html = `<div class="story-text">${ava} đếm xem có mấy ${item.n} nhé?</div><div class="visual-target" style="font-size: ${ans>5?'2em':'2.5em'};">${item.e.repeat(ans)}</div>`;
                     q.answer = ans;
                     let opts = new Set([ans]);
                     while(opts.size < 4) { opts.add(Math.floor(Math.random() * 12) + 1); }
                     q.options = Array.from(opts).sort(() => Math.random() - 0.5);
                 } else {
-                    // Game Tìm Hình Khớp (Logic nhận biết)
-                    let cItem = getRandomArr(ALL_ITEMS);
+                    let cItem = getRandomArr(D_ITEMS);
                     q.html = `<div class="story-text">${ava} ơi, đâu là ${cItem.n}?</div><div class="visual-target" style="font-size: 3em; color:var(--primary-hover);">❓</div>`;
                     q.answer = cItem.e;
-                    let wItems = shuffleSlice(ALL_ITEMS.filter(i => i.e !== cItem.e), 3);
+                    let wItems = shuffleSlice(D_ITEMS.filter(i => i.e !== cItem.e), 3);
                     q.options = [cItem.e, ...wItems.map(i=>i.e)].sort(() => Math.random() - 0.5); 
                 }
             } 
-            // CẤP 2 (Level 6-15): BÉ 6 TUỔI (Toán trực quan & Quy luật)
             else if (level <= 15) {
                 let type = Math.random();
-                if (type < 0.4) {
-                    // Toán Hình Ảnh (Ví dụ: 🍎🍎 + 🍎)
-                    let item = getRandomArr(ALL_ITEMS);
+                if (type < 0.35) {
+                    let item = getRandomArr(D_ITEMS);
                     let maxNum = level + 2;
                     let n1 = Math.floor(Math.random() * maxNum) + 2;
                     let n2 = Math.floor(Math.random() * maxNum) + 1;
@@ -545,9 +573,8 @@
                     while(opts.size < 4) { let fake = q.answer + (Math.floor(Math.random() * 5) + 1) * (Math.random() > 0.5 ? 1 : -1); if(fake>=0) opts.add(fake); }
                     q.options = Array.from(opts).sort(() => Math.random() - 0.5);
                 } else if (type < 0.7) {
-                    // Game Tư Duy: Tìm quy luật (IQ Pattern)
                     let pType = Math.floor(Math.random() * 3);
-                    let i1 = getRandomArr(ALL_ITEMS).e; let i2 = getRandomArr(ALL_ITEMS.filter(i=>i.e!==i1)).e; let i3 = getRandomArr(ALL_ITEMS.filter(i=>i.e!==i1 && i.e!==i2)).e;
+                    let i1 = getRandomArr(D_ITEMS).e; let i2 = getRandomArr(D_ITEMS.filter(i=>i.e!==i1)).e; let i3 = getRandomArr(D_ITEMS.filter(i=>i.e!==i1 && i.e!==i2)).e;
                     if (pType === 0) {
                         q.html = `<div class="story-text">${ava} tìm hình tiếp theo nhé:</div><div class="emoji-big">${i1} ${i2} ${i1} ${i2} <b>❓</b></div>`; q.answer = i1;
                     } else if (pType === 1) {
@@ -555,26 +582,22 @@
                     } else {
                         q.html = `<div class="story-text">${ava} đoán xem hình nào tiếp theo?</div><div class="emoji-big">${i1} ${i2} ${i3} ${i1} ${i2} <b>❓</b></div>`; q.answer = i3;
                     }
-                    let wOpts = shuffleSlice(ALL_ITEMS.filter(i=>i.e!==q.answer), 3);
+                    let wOpts = shuffleSlice(D_ITEMS.filter(i=>i.e!==q.answer), 3);
                     q.options = [q.answer, ...wOpts.map(i=>i.e)].sort(() => Math.random() - 0.5);
-                    return q; // Vì đáp án là Emoji nên trả về luôn
+                    return q;
                 } else {
-                    // Câu hỏi Logic Xã hội / Tư nhiên
-                    let sel = getRandomArr(K_LOGIC_3.concat(K_LOGIC_6));
+                    let sel = getRandomArr(K_LOGIC_3.concat(K_LOGIC));
                     q.html = `<div class="story-text">Câu đố tư duy:</div><div style="font-size:1.2em;">${sel.q}</div>`;
                     q.answer = sel.a; q.options = [sel.a, ...shuffleSlice(sel.f, 3)].sort(() => Math.random() - 0.5); return q;
                 }
             } 
-            // CẤP 3 (Level 16+): SỐ LỚN & TƯ DUY NÂNG CAO
             else {
                 let isMul = level > 18 && Math.random() > 0.6;
                 if (isMul) {
-                    // Phép Nhân
                     let maxM = Math.min(12, Math.floor(level / 2));
                     let m1 = Math.floor(Math.random() * maxM) + 2; let m2 = Math.floor(Math.random() * maxM) + 2; q.answer = m1 * m2;
                     q.html = `<div class="story-text">Thử thách nhân cho siêu trí tuệ ${ava}:</div><div style="font-size: 2.5em; margin-top:15px; color: var(--primary-hover);"><b>${m1} × ${m2} = ?</b></div>`;
                 } else {
-                    // Cộng trừ số lớn (đến hàng ngàn)
                     let maxNum = Math.min(2000, level * 20);
                     let num1 = Math.floor(Math.random() * maxNum) + 10; let num2 = Math.floor(Math.random() * maxNum) + 5;
                     let isMinus = Math.random() > 0.5;
@@ -585,7 +608,7 @@
                 let opts = new Set([q.answer]);
                 while(opts.size < 4) {
                     let offset = (Math.floor(Math.random() * 10) + 1) * (Math.random() > 0.5 ? 1 : -1);
-                    if (Math.random() > 0.7 && q.answer > 10) offset = 10; // Bẫy sai số hàng chục
+                    if (Math.random() > 0.7 && q.answer > 10) offset = 10; 
                     if (Math.random() > 0.7 && q.answer > 10) offset = -10;
                     let fake = q.answer + offset;
                     if(fake>=0 && fake !== q.answer) opts.add(fake);
