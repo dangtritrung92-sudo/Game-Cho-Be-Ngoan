@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thế Giới Tư Duy Của Bé</title>
     
-    <!-- Tích hợp thư viện Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" async></script>
@@ -230,7 +229,7 @@
 
     <script>
         // =========================================================================
-        // [CẤU HÌNH FIREBASE CLOUD] - Tích hợp lưu trữ online đồng bộ cực nhanh
+        // [CẤU HÌNH FIREBASE CLOUD]
         // =========================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyCfnrv1oTx9YXdfDHux3lSA41ZCFBtzLf0",
@@ -295,26 +294,52 @@
         let studyInterval = null; let questionTimeout = null; let editingIndex = -1;
         let questionStartTime = 0; let uploadTargetIndex = -1; let currentPin = "";
 
-        const D_ITEMS = [
-            {e:'🍎', n:'Quả Táo'}, {e:'🍌', n:'Quả Chuối'}, {e:'🍉', n:'Dưa Hấu'}, {e:'🍓', n:'Dâu Tây'}, {e:'🍇', n:'Chùm Nho'},
-            {e:'🐶', n:'Con Chó'}, {e:'🐱', n:'Con Mèo'}, {e:'🐭', n:'Con Chuột'}, {e:'🐰', n:'Con Thỏ'}, {e:'🐻', n:'Con Gấu'},
-            {e:'🚗', n:'Xe Hơi'}, {e:'✈️', n:'Máy Bay'}, {e:'🧸', n:'Gấu Bông'}, {e:'🎈', n:'Bóng Bay'}, {e:'⚽', n:'Quả Bóng'}
-        ];
-        
-        const K_LOGIC = [{q: 'Sáng sớm thức dậy, con sẽ thấy gì trên trời?', a: '☀️', f: ['🌙', '⭐', '☁️', '🌈']}, {q: 'Trời mưa to, con cần dùng gì để không ướt?', a: '☂️', f: ['🕶️', '🎒', '👟', '🧢']}, {q: 'Bạn Voi 🐘 và Bạn Chuột 🐭, bạn nào NẶNG hơn?', a: '🐘', f: ['🐭', '🐱', '🐰']}, {q: 'Máy bay ✈️ và Xe đạp 🚲, cái nào chạy NHANH hơn?', a: '✈️', f: ['🚲', '🚗', '🐢']}];
+        // =========================================================================================
+        // KHO DỮ LIỆU ĐA CHỦ ĐỀ SƯ PHẠM (Khoa học, Đời sống, Trong nhà, Siêu thị, Biển, Núi, Thói quen)
+        // =========================================================================================
+        const D_ANIMALS = [{e:'🐶', n:'Chó'}, {e:'🐱', n:'Mèo'}, {e:'🐭', n:'Chuột'}, {e:'🐰', n:'Thỏ'}, {e:'🐻', n:'Gấu'}, {e:'🐯', n:'Hổ'}, {e:'🦁', n:'Sư Tử'}, {e:'🐮', n:'Bò'}, {e:'🐷', n:'Lợn'}, {e:'🐸', n:'Ếch'}, {e:'🐵', n:'Khỉ'}, {e:'🐔', n:'Gà'}, {e:'🐘', n:'Voi'}, {e:'🦒', n:'Hươu'}, {e:'🦓', n:'Ngựa vằn'}, {e:'🐧', n:'Chim Cánh Cụt'}, {e:'🦘', n:'Kangaroo'}, {e:'🦉', n:'Cú mèo'}];
+        const D_FRUITS = [{e:'🍎', n:'Táo'}, {e:'🍌', n:'Chuối'}, {e:'🍉', n:'Dưa Hấu'}, {e:'🍓', n:'Dâu Tây'}, {e:'🍇', n:'Nho'}, {e:'🍊', n:'Cam'}, {e:'🥭', n:'Xoài'}, {e:'🥥', n:'Dừa'}, {e:'🥝', n:'Kiwi'}, {e:'🍒', n:'Cherry'}, {e:'🍑', n:'Đào'}, {e:'🍍', n:'Dứa'}, {e:'🥑', n:'Bơ'}];
+        const D_VEHICLES = [{e:'🚗', n:'Ô tô'}, {e:'✈️', n:'Máy Bay'}, {e:'🚁', n:'Trực Thăng'}, {e:'🚲', n:'Xe Đạp'}, {e:'🛵', n:'Xe Máy'}, {e:'🚢', n:'Tàu Thủy'}, {e:'🚂', n:'Tàu Hỏa'}, {e:'🚀', n:'Tên Lửa'}, {e:'🚒', n:'Cứu Hỏa'}, {e:'🚑', n:'Cứu Thương'}, {e:'🚓', n:'Cảnh Sát'}];
+        const D_HOME = [{e:'🛏️', n:'Giường'}, {e:'🛋️', n:'Sofa'}, {e:'🚽', n:'Bồn Cầu'}, {e:'🛁', n:'Bồn Tắm'}, {e:'🚿', n:'Vòi Sen'}, {e:'📺', n:'Tivi'}, {e:'🕰️', n:'Đồng Hồ'}, {e:'🚪', n:'Cửa'}, {e:'🪑', n:'Ghế'}, {e:'🧹', n:'Chổi'}];
+        const D_FOOD = [{e:'🍔', n:'Hamburger'}, {e:'🍕', n:'Pizza'}, {e:'🌭', n:'Xúc Xích'}, {e:'🥪', n:'Bánh Mì'}, {e:'🥗', n:'Salad'}, {e:'🍲', n:'Súp'}, {e:'🍚', n:'Cơm'}, {e:'🍜', n:'Phở'}, {e:'🍦', n:'Kem'}, {e:'🎂', n:'Bánh Sinh Nhật'}, {e:'🍬', n:'Kẹo'}];
+        const D_NATURE = [{e:'☀️', n:'Mặt Trời'}, {e:'🌙', n:'Mặt Trăng'}, {e:'⭐', n:'Ngôi Sao'}, {e:'☁️', n:'Mây'}, {e:'🌧️', n:'Mưa'}, {e:'🌩️', n:'Sấm Sét'}, {e:'❄️', n:'Tuyết'}, {e:'🌬️', n:'Gió'}, {e:'🌈', n:'Cầu Vồng'}, {e:'🌊', n:'Biển'}, {e:'🌋', n:'Núi Lửa'}, {e:'⛰️', n:'Núi'}, {e:'🏕️', n:'Cắm Trại'}, {e:'🏝️', n:'Đảo'}];
+        const D_TOYS = [{e:'🧸', n:'Gấu Bông'}, {e:'🎈', n:'Bóng Bay'}, {e:'⚽', n:'Quả Bóng'}, {e:'🎨', n:'Bút Màu'}, {e:'🪁', n:'Cái Diều'}, {e:'🪀', n:'Yoyo'}];
 
-        // ==========================================
-        // KHỞI TẠO ĐỒNG BỘ: TRÁNH LỖI TIMESTAMP MỚI TẠO ĐÈ LÊN CLOUD
-        // ==========================================
+        const ALL_ITEMS = [...D_FRUITS, ...D_ANIMALS, ...D_VEHICLES, ...D_HOME, ...D_FOOD, ...D_NATURE, ...D_TOYS];
+
+        // Tư duy liên kết hình ảnh (Dành cho 3 tuổi)
+        const K_ASSOCIATIONS = [
+            {q: '🌧️', a: '☂️', f: ['🕶️', '🎒', '🧢']}, {q: '☀️', a: '🕶️', f: ['☂️', '🧣', '🧤']},
+            {q: '🦷', a: '🪥', f: ['🍎', '⚽', '🚗']}, {q: '🦶', a: '👟', f: ['🧤', '🧣', '🧢']},
+            {q: '✍️', a: '📖', f: ['⚽', '🚗', '🍎']}, {q: '🗑️', a: '🧹', f: ['🧸', '🎈', '🍕']},
+            {q: '🥣', a: '🥄', f: ['👟', '☂️', '🚗']}, {q: '🛌', a: '😴', f: ['🏃', '💃', '🚴']}
+        ];
+
+        // Tư duy đời sống, gia đình, khoa học, đi chợ (Dành cho 6 tuổi)
+        const K_KNOWLEDGE = [
+            {q: 'Để răng luôn sạch khỏe, bé ngoan nên làm gì?', a: '🪥 Đánh răng', f: ['🍬 Ăn kẹo', '🎮 Chơi game', '👊 Đánh bạn']},
+            {q: 'Trước khi ăn cơm, bé ngoan phải làm gì?', a: '🧼 Rửa tay', f: ['📺 Xem TV', '🏃 Chạy nhảy', '😭 Khóc nhè']},
+            {q: 'Khi đi ra trời nắng gắt, bé nên đội gì?', a: '🧢 Cái Mũ', f: ['☂️ Cái Ô', '🧣 Khăn Quàng', '🧤 Bao Tay']},
+            {q: 'Mặt trời mọc ở hướng nào vào buổi sáng?', a: '🌅 Hướng Đông', f: ['🌄 Hướng Tây', '🧭 Hướng Nam', '🧭 Hướng Bắc']},
+            {q: 'Mặt trời lặn ở hướng nào vào buổi chiều?', a: '🌄 Hướng Tây', f: ['🌅 Hướng Đông', '🧭 Hướng Nam', '🧭 Hướng Bắc']},
+            {q: 'Khi đi tắm biển, con nên mang theo gì?', a: '🩱 Đồ bơi', f: ['🧥 Áo khoác dạ', '👢 Ủng đi tuyết', '🧣 Khăn len']},
+            {q: 'Con vật nào sống ở dưới biển?', a: '🐟 Con Cá', f: ['🐶 Con Chó', '🐔 Con Gà', '🐴 Con Ngựa']},
+            {q: 'Phương tiện nào dùng để bay lên vũ trụ?', a: '🚀 Tên Lửa', f: ['✈️ Máy Bay', '🚁 Trực Thăng', '🚗 Ô tô']},
+            {q: 'Khi ho hoặc hắt hơi, bé ngoan nên làm gì?', a: '🤧 Che miệng', f: ['🗣️ La hét', '🏃 Bỏ chạy', '😂 Cười to']}
+        ];
+
+        const K_MATH_MARKET = ['Mẹ đi chợ mua', 'Ba đi siêu thị mua', 'Bà mang về', 'Nhà mình có sẵn'];
+        const K_MATH_PARK = ['Ba mua vé cho', 'Khu vui chơi có', 'Mẹ thưởng thêm', 'Gia đình cùng chơi'];
+
+        // --- KHỞI TẠO TÍCH HỢP ĐỒNG BỘ DECOUPLED ---
         function initApp() {
             let isLoaded = false;
-            const localRaw = localStorage.getItem('brainGameData_v20'); // Đổi key v20 làm sạch lỗi cũ
+            const localRaw = localStorage.getItem('brainGameData_v21'); 
             let localData = localRaw ? JSON.parse(localRaw) : null;
 
             if (isFirebaseConnected) {
                 document.getElementById('firebase-status').innerText = "📡 Đang lấy dữ liệu máy chủ Cloud...";
                 
-                // Fallback nếu mạng yếu
                 setTimeout(() => {
                     if (!isLoaded) {
                         isLoaded = true;
@@ -327,44 +352,24 @@
                     isLoaded = true;
                     
                     const cloudData = snapshot.val();
-                    
                     if (cloudData && cloudData.kids) {
-                        // So sánh dữ liệu Cloud với dữ liệu Local
-                        // Ưu tiên dữ liệu Cloud nếu Local chưa có gì, HOẶC Cloud có Timestamp mới hơn
                         if (!localData || (cloudData.lastUpdated || 0) > (localData.lastUpdated || 0) || localData.kids.length === 0) {
-                            appData = cloudData;
-                            ensureDataStructure();
-                            localStorage.setItem('brainGameData_v20', JSON.stringify(appData));
-                            
-                            changeTheme(appData.theme || 'default');
-                            renderKidsMenu();
+                            appData = cloudData; ensureDataStructure(); localStorage.setItem('brainGameData_v21', JSON.stringify(appData));
+                            changeTheme(appData.theme || 'default'); renderKidsMenu();
                             if(!document.getElementById('screen-parent').classList.contains('hidden')) renderParentDashboard();
                             if(!document.getElementById('screen-game').classList.contains('hidden')) updateGameHeader();
                             document.getElementById('firebase-status').innerText = "⚡ Đã cập nhật tức thì từ Cloud!";
                         } else if ((cloudData.lastUpdated || 0) < (localData.lastUpdated || 0)) {
-                            // Local mới hơn -> Cập nhật lên Cloud
-                            appData = localData;
-                            dbRef.set(appData);
-                            document.getElementById('firebase-status').innerText = "✅ Đã đồng bộ từ Máy lên Cloud";
-                            changeTheme(appData.theme || 'default');
-                            renderKidsMenu();
+                            appData = localData; dbRef.set(appData); document.getElementById('firebase-status').innerText = "✅ Đã đồng bộ từ Máy lên Cloud";
+                            changeTheme(appData.theme || 'default'); renderKidsMenu();
                         } else {
-                            appData = cloudData;
-                            document.getElementById('firebase-status').innerText = "✅ Dữ liệu Cloud đồng bộ an toàn";
-                            changeTheme(appData.theme || 'default');
-                            renderKidsMenu();
+                            appData = cloudData; document.getElementById('firebase-status').innerText = "✅ Dữ liệu Cloud đồng bộ an toàn";
+                            changeTheme(appData.theme || 'default'); renderKidsMenu();
                         }
                     } else {
-                        // Firebase trống trơn
-                        if (localData && localData.kids && localData.kids.length > 0) {
-                            appData = localData;
-                        } else {
-                            createDefaultProfiles();
-                        }
-                        dbRef.set(appData);
-                        document.getElementById('firebase-status').innerText = "✅ Khởi tạo dữ liệu Cloud thành công";
-                        changeTheme(appData.theme || 'default');
-                        renderKidsMenu();
+                        if (localData && localData.kids && localData.kids.length > 0) { appData = localData; } else { createDefaultProfiles(); }
+                        dbRef.set(appData); document.getElementById('firebase-status').innerText = "✅ Khởi tạo dữ liệu Cloud thành công";
+                        changeTheme(appData.theme || 'default'); renderKidsMenu();
                     }
                 });
             } else {
@@ -374,14 +379,8 @@
 
         function loadFallback(localData, msg) {
             document.getElementById('firebase-status').innerText = msg;
-            if (localData && localData.kids && localData.kids.length > 0) { 
-                appData = localData; 
-                ensureDataStructure();
-            } else { 
-                createDefaultProfiles(); 
-            }
-            changeTheme(appData.theme || 'default');
-            renderKidsMenu();
+            if (localData && localData.kids && localData.kids.length > 0) { appData = localData; ensureDataStructure(); } else { createDefaultProfiles(); }
+            changeTheme(appData.theme || 'default'); renderKidsMenu();
         }
 
         function createDefaultProfiles() {
@@ -394,19 +393,15 @@
         function ensureDataStructure() {
             if(!appData.kids) appData.kids = [];
             appData.kids.forEach(k => {
-                if(k.totalCorrect === undefined) k.totalCorrect = 0;
-                if(k.totalWrong === undefined) k.totalWrong = 0;
-                if(k.fastAnswers === undefined) k.fastAnswers = 0;
+                if(k.totalCorrect === undefined) k.totalCorrect = 0; if(k.totalWrong === undefined) k.totalWrong = 0; if(k.fastAnswers === undefined) k.fastAnswers = 0;
                 if(!k.dob) k.dob = "2020-01-01";
             });
         }
 
         function saveData() { 
             appData.lastUpdated = Date.now();
-            localStorage.setItem('brainGameData_v20', JSON.stringify(appData)); 
-            if (isFirebaseConnected) { 
-                dbRef.set(appData).catch(e => console.log("Lỗi đồng bộ Cloud:", e)); 
-            }
+            localStorage.setItem('brainGameData_v21', JSON.stringify(appData)); 
+            if (isFirebaseConnected) { dbRef.set(appData).catch(e => console.log("Lỗi đồng bộ Cloud:", e)); }
         }
 
         function showToast(msg) { let t = document.getElementById('toast-msg'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
@@ -538,59 +533,87 @@
         function getRandomArr(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
         function shuffleSlice(arr, count) { return [...arr].sort(() => 0.5 - Math.random()).slice(0, count); }
 
+        // =========================================================================
+        // [ĐỘNG CƠ CÂU HỎI TRỰC QUAN & TƯ DUY - PHIÊN BẢN KHÔNG CHỮ CHO BÉ 3 TUỔI]
+        // =========================================================================
         function generateKidFriendlyQuestion(kid, level) {
             let q = { html: '', answer: null, options: [] };
             let ava = kid.avatarType === 'image' ? `<img src="${kid.avatarData}" class="inline-avatar" style="border-radius:50%; object-fit:cover; border:2px solid var(--primary);">` : `<span class="inline-avatar" style="font-size:1.5em;">${kid.avatarData}</span>`; 
 
+            // CẤP 1 (Level 1-5): BÉ 3 TUỔI (Không bắt đọc chữ, 100% hình ảnh)
             if (level <= 5) {
                 let rType = Math.random();
-                if (rType < 0.5) {
-                    let ans = Math.floor(Math.random() * (level + 2)) + 1; 
-                    let item = getRandomArr(D_ITEMS);
-                    q.html = `<div class="story-text">${ava} đếm xem có mấy ${item.n} nhé?</div><div class="visual-target" style="font-size: ${ans>5?'2em':'2.5em'};">${item.e.repeat(ans)}</div>`;
+                if (rType < 0.33) {
+                    // DẠNG 1: ĐẾM HÌNH (Dùng biểu tượng lớn)
+                    let ans = Math.floor(Math.random() * (level * 2 + 1)) + 1; 
+                    let item = getRandomArr(ALL_ITEMS);
+                    q.html = `<div class="story-text">${ava} đếm xem có mấy ${item.n}?</div><div class="visual-target" style="font-size: ${ans>5?'1.5em':'2.2em'}; letter-spacing: 5px;">${item.e.repeat(ans)}</div>`;
                     q.answer = ans;
                     let opts = new Set([ans]);
                     while(opts.size < 4) { opts.add(Math.floor(Math.random() * 12) + 1); }
                     q.options = Array.from(opts).sort(() => Math.random() - 0.5);
-                } else {
-                    let cItem = getRandomArr(D_ITEMS);
-                    q.html = `<div class="story-text">${ava} ơi, đâu là ${cItem.n}?</div><div class="visual-target" style="font-size: 3em; color:var(--primary-hover);">❓</div>`;
+                } else if (rType < 0.66) {
+                    // DẠNG 2: TÌM HÌNH GIỐNG HỆT (Không cần đọc chữ)
+                    let cItem = getRandomArr(ALL_ITEMS);
+                    q.html = `<div class="story-text">${ava} ơi, đâu là hình này:</div><div class="visual-target" style="font-size: 3.5em; border: 4px solid var(--card-border); border-radius: 20px; padding: 10px; background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">${cItem.e}</div>`;
                     q.answer = cItem.e;
-                    let wItems = shuffleSlice(D_ITEMS.filter(i => i.e !== cItem.e), 3);
+                    let wItems = shuffleSlice(ALL_ITEMS.filter(i => i.e !== cItem.e), 3);
                     q.options = [cItem.e, ...wItems.map(i=>i.e)].sort(() => Math.random() - 0.5); 
+                } else {
+                    // DẠNG 3: TƯ DUY LIÊN KẾT (Tìm vật dụng liên quan)
+                    let assoc = getRandomArr(K_ASSOCIATIONS);
+                    q.html = `<div class="story-text">${ava} thấy cái này thì dùng cái nào?</div><div class="visual-target" style="font-size: 3.5em;">${assoc.q} ➡️ ❓</div>`;
+                    q.answer = assoc.a;
+                    q.options = [assoc.a, ...shuffleSlice(assoc.f, 3)].sort(() => Math.random() - 0.5);
                 }
             } 
+            // CẤP 2 (Level 6-15): BÉ 6 TUỔI (Toán trực quan & Quy luật Logic đời sống)
             else if (level <= 15) {
                 let type = Math.random();
-                if (type < 0.35) {
-                    let item = getRandomArr(D_ITEMS);
-                    let maxNum = level + 2;
-                    let n1 = Math.floor(Math.random() * maxNum) + 2;
-                    let n2 = Math.floor(Math.random() * maxNum) + 1;
-                    q.html = `<div class="story-text">Phép tính cho ${ava} đây:</div><div class="emoji-big" style="font-size:35px; letter-spacing: 2px;">${item.e.repeat(n1)} + ${item.e.repeat(n2)} = ?</div>`;
+                if (type < 0.3) {
+                    // DẠNG 1: TOÁN BẰNG HÌNH ẢNH (Ví dụ: 🍎🍎 + 🍎)
+                    let item = getRandomArr(ALL_ITEMS);
+                    let maxNum = level + 2; let n1 = Math.floor(Math.random() * maxNum) + 2; let n2 = Math.floor(Math.random() * maxNum) + 1;
+                    q.html = `<div class="story-text">Phép tính của ${ava} đây:</div><div class="emoji-big" style="font-size:30px; letter-spacing: 2px;">${item.e.repeat(n1)} <br>➕<br> ${item.e.repeat(n2)} <br>🟰 ❓</div>`;
                     q.answer = n1 + n2;
                     let opts = new Set([q.answer]);
                     while(opts.size < 4) { let fake = q.answer + (Math.floor(Math.random() * 5) + 1) * (Math.random() > 0.5 ? 1 : -1); if(fake>=0) opts.add(fake); }
                     q.options = Array.from(opts).sort(() => Math.random() - 0.5);
-                } else if (type < 0.7) {
+                } else if (type < 0.6) {
+                    // DẠNG 2: QUY LUẬT HÌNH HỌC (Pattern logic)
                     let pType = Math.floor(Math.random() * 3);
-                    let i1 = getRandomArr(D_ITEMS).e; let i2 = getRandomArr(D_ITEMS.filter(i=>i.e!==i1)).e; let i3 = getRandomArr(D_ITEMS.filter(i=>i.e!==i1 && i.e!==i2)).e;
+                    let i1 = getRandomArr(ALL_ITEMS).e; let i2 = getRandomArr(ALL_ITEMS.filter(i=>i.e!==i1)).e; let i3 = getRandomArr(ALL_ITEMS.filter(i=>i.e!==i1 && i.e!==i2)).e;
                     if (pType === 0) {
-                        q.html = `<div class="story-text">${ava} tìm hình tiếp theo nhé:</div><div class="emoji-big">${i1} ${i2} ${i1} ${i2} <b>❓</b></div>`; q.answer = i1;
+                        q.html = `<div class="story-text">${ava} điền hình vào chỗ trống nhé:</div><div class="emoji-big" style="letter-spacing:10px;">${i1}${i2}${i1}${i2}<b>❓</b></div>`; q.answer = i1;
                     } else if (pType === 1) {
-                        q.html = `<div class="story-text">Quy luật cho ${ava} đây:</div><div class="emoji-big">${i1} ${i1} ${i2} ${i1} ${i1} <b>❓</b></div>`; q.answer = i2;
+                        q.html = `<div class="story-text">Quy luật cho ${ava} đây:</div><div class="emoji-big" style="letter-spacing:10px;">${i1}${i1}${i2}${i1}${i1}<b>❓</b></div>`; q.answer = i2;
                     } else {
-                        q.html = `<div class="story-text">${ava} đoán xem hình nào tiếp theo?</div><div class="emoji-big">${i1} ${i2} ${i3} ${i1} ${i2} <b>❓</b></div>`; q.answer = i3;
+                        q.html = `<div class="story-text">${ava} đoán xem hình nào tiếp theo?</div><div class="emoji-big" style="letter-spacing:10px;">${i1}${i2}${i3}${i1}${i2}<b>❓</b></div>`; q.answer = i3;
                     }
-                    let wOpts = shuffleSlice(D_ITEMS.filter(i=>i.e!==q.answer), 3);
+                    let wOpts = shuffleSlice(ALL_ITEMS.filter(i=>i.e!==q.answer), 3);
                     q.options = [q.answer, ...wOpts.map(i=>i.e)].sort(() => Math.random() - 0.5);
-                    return q;
+                    return q; 
+                } else if (type < 0.8) {
+                    // DẠNG 3: TOÁN CÓ CỐT TRUYỆN NGẮN (Thực tế)
+                    let item = getRandomArr(ALL_ITEMS); let n1 = Math.floor(Math.random() * 8) + 4; let n2 = Math.floor(Math.random() * 6) + 2;
+                    if(Math.random() > 0.5) {
+                        let act = getRandomArr(K_MATH_MARKET);
+                        q.answer = n1 + n2; q.html = `<div class="story-text">${act} <b>${n1}</b> ${item.e}.<br>Sau đó mua thêm <b>${n2}</b> ${item.e}.<br>Hỏi có tất cả bao nhiêu ${item.n}?</div>`;
+                    } else {
+                        let act = getRandomArr(K_MATH_PARK);
+                        n1 = Math.max(n1, n2 + 1); q.answer = n1 - n2; q.html = `<div class="story-text">${ava} có <b>${n1}</b> ${item.e}.<br>Cho bạn mượn <b>${n2}</b> ${item.e}.<br>Hỏi con còn lại mấy ${item.n}?</div>`;
+                    }
+                    let opts = new Set([q.answer]);
+                    while(opts.size < 4) { let fake = q.answer + (Math.floor(Math.random() * 5) + 1) * (Math.random() > 0.5 ? 1 : -1); if(fake>=0) opts.add(fake); }
+                    q.options = Array.from(opts).sort(() => Math.random() - 0.5);
                 } else {
-                    let sel = getRandomArr(K_LOGIC_3.concat(K_LOGIC));
-                    q.html = `<div class="story-text">Câu đố tư duy:</div><div style="font-size:1.2em;">${sel.q}</div>`;
+                    // DẠNG 4: Câu hỏi Kiến thức Xã hội / Khoa học
+                    let sel = getRandomArr(K_KNOWLEDGE);
+                    q.html = `<div class="story-text">Câu hỏi khám phá thế giới:</div><div style="font-size:1.2em; font-weight:900; color:var(--primary-hover);">${sel.q}</div>`;
                     q.answer = sel.a; q.options = [sel.a, ...shuffleSlice(sel.f, 3)].sort(() => Math.random() - 0.5); return q;
                 }
             } 
+            // CẤP 3 (Level 16+): SỐ LỚN & TƯ DUY NÂNG CAO
             else {
                 let isMul = level > 18 && Math.random() > 0.6;
                 if (isMul) {
